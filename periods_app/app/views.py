@@ -11,6 +11,8 @@ from rest_framework import status
 from .models import User, Chat
 from .serializers import UserSignupSerializer, UserLoginSerializer, ChatSerializer
 
+from fcm_django.models import FCMDevice
+
 
 class UserSignupView(APIView):
     permission_classes = (AllowAny,)
@@ -25,7 +27,6 @@ class UserSignupView(APIView):
                 password=user_data['password'], 
                 username=user_data['username'], 
                 phone_no=user_data['phone_no'],
-                device_id=user_data['device_id'],
                 date_of_birth=user_data['date_of_birth'])
             return Response({"message":"User Signed up successfully", "User":user_data}, status=status.HTTP_201_CREATED)
         else:
@@ -58,12 +59,11 @@ class UserLoginView(APIView):
                     "email":user.email,
                     "username":user.username,
                     "phone_no":user.phone_no,
-                    "device_id":user.device_id,
                     "date_of_birth":user.date_of_birth,
                     "token":token.key
             }})
 
-class USerLogoutView(APIView):
+class UserLogoutView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, format=None):
@@ -75,8 +75,67 @@ class USerLogoutView(APIView):
                 "email":user.email,
                 "username":user.username,
                 "phone_no":user.phone_no,
-                "device_id":user.device_id,
                 "date_of_birth":user.date_of_birth
             }}
         request.user.auth_token.delete()
         return Response(response, status=status.HTTP_200_OK)
+
+
+class FCMRegisterDeviceView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        req_data = request.data
+        user = request.user
+        try:
+            device = FCMDevice.objects.get(user=user)
+            return Response({"message":"Device already registered for the user"}, status=status.HTTP_400_BAD_REQUEST)
+        except:
+            device = FCMDevice()
+            device.device_id = req_data['device_id']
+            device.registration_id = req_data['registration_id']
+            device.type = "Android"
+            device.user = request.user
+            device.save()
+            return Response(
+                {"message":"New Device Registered", 
+                "device_details":{
+                    "device_id":device.device_id,
+                    "registration_id":device.registration_id,
+                    "type":device.type,
+                    "user":device.user.id
+                }},
+                status=status.HTTP_201_CREATED)
+    
+    def patch(self, request):
+        req_data = request.data
+        user = request.user
+        try:
+            device = FCMDevice.objects.get(user=user)
+            device.registration_id = req_data['registration_id']
+            device.save()
+            return Response(
+                {"message":"Device registration_id updated",
+                "device_details":{
+                    "device_id":device.device_id,
+                    "registration_id":device.registration_id,
+                    "type":device.type,
+                    "user":device.user.id
+                }}, status=status.HTTP_200_OK)
+        except:
+            return Response({"message":"User does not have a registered device"}, status=status.HTTP_400_BAD_REQUEST)
+            
+
+class FCMPushNotificationView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        user = request.user
+        try:
+            device = FCMDevice.objects.get(user=user)
+            device.send_message(data={"lat": 12.11, "lon":23.09})
+            return Response({"message":"Sent notificaion"}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"message":str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    

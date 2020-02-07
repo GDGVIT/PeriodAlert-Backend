@@ -52,6 +52,7 @@ INSTALLED_APPS = [
 
     'rest_framework',
     'rest_framework.authtoken',
+    "fcm_django",
 ]
 
 MIDDLEWARE = [
@@ -84,6 +85,17 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'periods_app.wsgi.application'
 
+
+FCM_DJANGO_SETTINGS = {
+        "FCM_SERVER_KEY": os.getenv('FCM_SERVER_KEY'),
+         # true if you want to have only one active device per registered user at a time
+         # default: False
+        "ONE_DEVICE_PER_USER": True,
+         # devices to which notifications cannot be sent,
+         # are deleted upon receiving error response from FCM
+         # default: False
+        "DELETE_INACTIVE_DEVICES": False,
+}
 
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases

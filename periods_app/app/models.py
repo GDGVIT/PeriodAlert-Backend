@@ -12,7 +12,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     username = models.CharField(max_length=50)
     date_of_birth = models.DateField()
     phone_no = models.CharField(max_length=10)
-    device_id = models.CharField(max_length=5000)
     willin_to_help = models.IntegerField(default=1)     # 1-Willing to help, 0-Not Willing to help
     is_staff = models.BooleanField(default=False)       # Field necessary for a django user
     is_active = models.BooleanField(default=True)       # Field necessary for a django user

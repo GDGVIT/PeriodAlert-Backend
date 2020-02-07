@@ -112,7 +112,10 @@ class FCMRegisterDeviceView(APIView):
         user = request.user
         try:
             device = FCMDevice.objects.get(user=user)
-            device.registration_id = req_data['registration_id']
+            if req_data['device_id'] != None:
+                device.device_id = req_data['device_id']
+            if req_data['registration_id'] != None:
+                device.registration_id = req_data['registration_id']
             device.save()
             return Response(
                 {"message":"Device registration_id updated",
@@ -130,10 +133,11 @@ class FCMPushNotificationView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
-        user = request.user
+        lat = request.query_params.get("lat", None)
+        lon = request.query_params.get("lon", None)
         try:
-            device = FCMDevice.objects.get(user=user)
-            device.send_message(data={"lat": 12.11, "lon":23.09})
+            devices = FCMDevice.objects.all()
+            devices.send_message(data={"lat":lat, "lon":lon})
             return Response({"message":"Sent notificaion"}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({"message":str(e)}, status=status.HTTP_400_BAD_REQUEST)

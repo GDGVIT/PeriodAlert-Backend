@@ -13,10 +13,11 @@ from .serializers import UserSignupSerializer, UserLoginSerializer, ChatSerializ
 
 from fcm_django.models import FCMDevice
 
-
+# Signe up a new user View
 class UserSignupView(APIView):
     permission_classes = (AllowAny,)
 
+    # Sigup user (create new object)
     def post(self, request):
         serializer = UserSignupSerializer(data=request.data)
 
@@ -32,6 +33,7 @@ class UserSignupView(APIView):
         else:
             return Response({"message":"Invalid Data"}, status=status.HTTP_400_BAD_REQUEST)
 
+    # Check if user exists or not
     def get(self, request):
         email = request.query_params.get("email")
         password = request.query_params.get("password")
@@ -42,6 +44,7 @@ class UserSignupView(APIView):
         else:
             return Response({"message":"User Already Exists"}, status=status.HTTP_302_FOUND)
 
+# View for user login
 class UserLoginView(APIView):
     permission_classes = (AllowAny,)
 
@@ -63,6 +66,7 @@ class UserLoginView(APIView):
                     "token":token.key
             }})
 
+# Signout new user
 class UserLogoutView(APIView):
     permission_classes = (IsAuthenticated,)
 
@@ -80,10 +84,11 @@ class UserLogoutView(APIView):
         request.user.auth_token.delete()
         return Response(response, status=status.HTTP_200_OK)
 
-
+# Register a new device to backend and store registration_id
 class FCMRegisterDeviceView(APIView):
     permission_classes = (IsAuthenticated,)
 
+    # Register a new device (create new object)
     def post(self, request):
         req_data = request.data
         user = request.user
@@ -107,6 +112,7 @@ class FCMRegisterDeviceView(APIView):
                 }},
                 status=status.HTTP_201_CREATED)
     
+    # Update the device_id or registraton_token for a registered device
     def patch(self, request):
         req_data = request.data
         user = request.user
@@ -128,7 +134,7 @@ class FCMRegisterDeviceView(APIView):
         except:
             return Response({"message":"User does not have a registered device"}, status=status.HTTP_400_BAD_REQUEST)
             
-
+# Send Alert notification to all the devices other than the users device
 class FCMPushNotificationView(APIView):
     permission_classes = (IsAuthenticated,)
 
@@ -136,7 +142,14 @@ class FCMPushNotificationView(APIView):
         lat = request.query_params.get("lat", None)
         lon = request.query_params.get("lon", None)
         try:
-            devices = FCMDevice.objects.all()
+            # Checking if the user making quesry has a registered device
+            user = request.user
+            try:
+                device = FCMDevice.objects.get(user=user)
+            except:
+                return Response({"message":"The User's device is not registered"}, status=status.HTTP_400_BAD_REQUEST)
+            # To get all devices other than the one who made request
+            devices = FCMDevice.objects.exclude(user=user)
             devices.send_message(data={"lat":lat, "lon":lon})
             return Response({"message":"Sent notificaion"}, status=status.HTTP_200_OK)
         except Exception as e:

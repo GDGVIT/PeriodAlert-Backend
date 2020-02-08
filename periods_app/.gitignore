@@ -107,5 +107,3 @@ venv.bak/
 .env.*
 uploads/*
 db.sqlite3
-
-.env

@@ -1,17 +1,19 @@
 from django.shortcuts import render
 from django.contrib.auth import authenticate
+from django.contrib.auth import login, logout
+from django.db.models import Q
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.permissions import AllowAny
-from rest_framework.authtoken.models import Token
 from rest_framework import status
 
-from .models import User, Chat
-from .serializers import UserSignupSerializer, UserLoginSerializer, ChatSerializer
-
+from .models import User, ChatRoom, Messages, Requests
+from .serializers import UserSignupSerializer, UserLoginSerializer, ChatRoomSerializer, RequestsSerializer
 from fcm_django.models import FCMDevice
+
+from datetime import datetime
 
 # Signe up a new user View
 class UserSignupView(APIView):
@@ -54,7 +56,7 @@ class UserLoginView(APIView):
         if not user:
             return Response({"message":"Invalid Details"}, status=status.HTTP_400_BAD_REQUEST)
         else:
-            token, _ = Token.objects.get_or_create(user=user)
+            login(request, user)
             return Response({
                 "message":"User Logged In", 
                 "User":{
@@ -62,8 +64,7 @@ class UserLoginView(APIView):
                     "email":user.email,
                     "username":user.username,
                     "phone_no":user.phone_no,
-                    "date_of_birth":user.date_of_birth,
-                    "token":token.key
+                    "date_of_birth":user.date_of_birth
             }})
 
 # Signout new user
@@ -81,7 +82,7 @@ class UserLogoutView(APIView):
                 "phone_no":user.phone_no,
                 "date_of_birth":user.date_of_birth
             }}
-        request.user.auth_token.delete()
+        logout(request)
         return Response(response, status=status.HTTP_200_OK)
 
 # Register a new device to backend and store registration_id
@@ -150,9 +151,31 @@ class FCMPushNotificationView(APIView):
                 return Response({"message":"The User's device is not registered"}, status=status.HTTP_400_BAD_REQUEST)
             # To get all devices other than the one who made request
             devices = FCMDevice.objects.exclude(user=user)
-            devices.send_message(data={"lat":lat, "lon":lon})
-            return Response({"message":"Sent notificaion"}, status=status.HTTP_200_OK)
+            devices.send_message(data={"lat":lat, "lon":lon, "user_id":user.id})
+           
+           # Creating a new request for help in the database
+            req_ser = RequestsSerializer(data={
+                "user_id":user.id,
+                "latitude":lat,
+                "longitude":lon
+            })
+            if req_ser.is_valid():
+                req_ser.save()
+                return Response({"message":"Sent notificaion", "Request":req_ser.data}, status=status.HTTP_200_OK)
+            else:
+                return Response({"message":req_ser.errors}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response({"message":str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ViewRequests(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        user = request.user
+        today_date = datetime.today().strftime('%Y-%m-%d')
+        req_objects = Requests.objects.filter(Q(date_time_creation__date=today_date) & ~Q(user_id=user.id))
+        response = RequestsSerializer(req_objects, many=True)
+        return Response({"message":"Received Requests", "Requests":response.data}, status=status.HTTP_200_OK)
 
     

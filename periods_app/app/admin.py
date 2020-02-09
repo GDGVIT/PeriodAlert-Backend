@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User, Chat
+from .models import User, ChatRoom, Messages, Requests
 from .forms import CustomUserCreationForm, CustomUserChangeForm
 
 
@@ -24,4 +24,6 @@ class CustomUserAdmin(UserAdmin):
     ordering = ('email', 'username', 'phone_no')
 
 admin.site.register(User, CustomUserAdmin)
-admin.site.register(Chat)
+admin.site.register(ChatRoom)
+admin.site.register(Messages)
+admin.site.register(Requests)

@@ -31,7 +31,7 @@ ALLOWED_HOSTS = []
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated', )
@@ -49,10 +49,12 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     
     'app',
+    'chatapi',
 
     'rest_framework',
     'rest_framework.authtoken',
     "fcm_django",
+    'channels',
 ]
 
 MIDDLEWARE = [
@@ -84,6 +86,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'periods_app.wsgi.application'
+ASGI_APPLICATION = 'periods_app.routing.application'
 
 
 FCM_DJANGO_SETTINGS = {

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from app.models import User, Chat
+from app.models import User, ChatRoom, Messages, Requests
 
 class UserSignupSerializer(serializers.ModelSerializer):
     class Meta:
@@ -11,7 +11,12 @@ class UserLoginSerializer(serializers.ModelSerializer):
         model = User
         fields = ('email', 'username', 'password')
 
-class ChatSerializer(serializers.ModelSerializer):
+class ChatRoomSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Chat
+        model = ChatRoom
+        fields = "__all__"
+
+class RequestsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Requests
         fields = "__all__"

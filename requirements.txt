@@ -14,6 +14,7 @@ cryptography==2.8
 daphne==2.4.1
 DateTime==4.3
 Django==3.0.2
+django-cors-headers==3.2.1
 djangorestframework==3.11.0
 djangorestframework-simplejwt==4.4.0
 fcm-django==0.3.4
@@ -29,6 +30,7 @@ pyfcm==1.4.7
 PyHamcrest==2.0.0
 PyJWT==1.7.1
 pyOpenSSL==19.1.0
+python-dotenv==0.11.0
 pytz==2019.3
 requests==2.22.0
 service-identity==18.1.0

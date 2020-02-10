@@ -1,27 +1,42 @@
+import json
+from datetime import datetime
+
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
-import json
+from django.db.models import Q
+from rest_framework.authtoken.models import Token
+
+from app.models import ChatRoom, Messages, Requests, User
+from app.serializers import ChatRoomSerializer, MessageSerializer
+
+from fcm_django.models import FCMDevice
+
 
 class ChatConsumer(WebsocketConsumer):
     def connect(self):
-        user = self.scope['user']
-        print(self.scope['headers'])
+        token = self.scope['url_route']['kwargs']['token']
+        is_request_acceptor = self.scope['url_route']['kwargs']['is_request_acceptor']
+        receiver_id = self.scope['url_route']['kwargs']['receiver_id']
+        try:
+            user = Token.objects.get(key=token).user
+            receiver = User.objects.get(id=receiver_id)
 
-        if user.is_anonymous:
-            self.close()
-        else:
+            self.room_name = "room_id"
+            self.room_group_name = 'chat_room_%s' % self.room_name
+            print(self.room_group_name)
+
+            # Join room group
+            async_to_sync(self.channel_layer.group_add)(
+                self.room_group_name,
+                self.channel_name
+            )
+
             self.accept()
-        self.room_name = self.scope['url_route']['kwargs']['room_name']
-        self.room_group_name = 'chat_%s' % self.room_name
-
-        # Join room group
-        async_to_sync(self.channel_layer.group_add)(
-            self.room_group_name,
-            self.channel_name
-        )
-
-        self.accept()
-
+        except Token.DoesNotExist:
+            print("Not valid user")
+            self.close()  
+        
+        
     def disconnect(self, close_code):
         # Leave room group
         async_to_sync(self.channel_layer.group_discard)(

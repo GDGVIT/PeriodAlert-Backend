@@ -20,3 +20,8 @@ class RequestsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Requests
         fields = "__all__"
+
+class MessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Messages
+        fields = "__all__"

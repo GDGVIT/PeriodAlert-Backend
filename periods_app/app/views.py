@@ -1,19 +1,22 @@
-from django.shortcuts import render
-from django.contrib.auth import authenticate
-from django.contrib.auth import login, logout
+from datetime import datetime
+
+from django.contrib.auth import authenticate, login, logout
 from django.db.models import Q
+from django.shortcuts import render
+from django.views.decorators.csrf import csrf_exempt
 
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.permissions import AllowAny
-from rest_framework import status
-
-from .models import User, ChatRoom, Messages, Requests
-from .serializers import UserSignupSerializer, UserLoginSerializer, ChatRoomSerializer, RequestsSerializer
 from fcm_django.models import FCMDevice
 
-from datetime import datetime
+from rest_framework import status
+from rest_framework.authtoken.models import Token
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from .models import ChatRoom, Messages, Requests, User
+from .serializers import (ChatRoomSerializer, RequestsSerializer,
+                          UserLoginSerializer, UserSignupSerializer)
+
 
 # Signe up a new user View
 class UserSignupView(APIView):
@@ -49,14 +52,14 @@ class UserSignupView(APIView):
 # View for user login
 class UserLoginView(APIView):
     permission_classes = (AllowAny,)
-
+    
     def post(self, request):
         req_data = request.data
         user = authenticate(email=req_data['email'], password=req_data['password'])
         if not user:
             return Response({"message":"Invalid Details"}, status=status.HTTP_400_BAD_REQUEST)
         else:
-            login(request, user)
+            token, _ = Token.objects.get_or_create(user=user)
             return Response({
                 "message":"User Logged In", 
                 "User":{
@@ -64,7 +67,8 @@ class UserLoginView(APIView):
                     "email":user.email,
                     "username":user.username,
                     "phone_no":user.phone_no,
-                    "date_of_birth":user.date_of_birth
+                    "date_of_birth":user.date_of_birth,
+                    "token":token.key
             }})
 
 # Signout new user
@@ -82,7 +86,7 @@ class UserLogoutView(APIView):
                 "phone_no":user.phone_no,
                 "date_of_birth":user.date_of_birth
             }}
-        logout(request)
+        request.user.auth_token.delete()
         return Response(response, status=status.HTTP_200_OK)
 
 # Register a new device to backend and store registration_id
@@ -177,5 +181,3 @@ class ViewRequests(APIView):
         req_objects = Requests.objects.filter(Q(date_time_creation__date=today_date) & ~Q(user_id=user.id))
         response = RequestsSerializer(req_objects, many=True)
         return Response({"message":"Received Requests", "Requests":response.data}, status=status.HTTP_200_OK)
-
-    

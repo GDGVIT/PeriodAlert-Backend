@@ -15,7 +15,8 @@ from rest_framework.views import APIView
 
 from .models import ChatRoom, Messages, Requests, User
 from .serializers import (ChatRoomSerializer, RequestsSerializer,
-                          UserLoginSerializer, UserSignupSerializer)
+                          UserLoginSerializer, UserSignupSerializer,
+                          MessageSerializer)
 
 
 # Signe up a new user View
@@ -221,3 +222,17 @@ class ViewUserDetails(APIView):
                 "date_of_birth":user.date_of_birth
             }                
         })
+
+
+class PreviousMessagesView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request, pk):
+        user = request.user
+        chatroom = ChatRoom.objects.filter(Q(participant1_id=user.id) | Q(participant2_id=user.id))
+        if len(chatroom) == 0:
+            return Response({"message":"Invalid Chat Room"}, status=status.HTTP_400_BAD_REQUEST)
+        messages = Messages.objects.filter(chat_room_id=pk)[:30]
+        messages_serializer = MessageSerializer(messages, many=True)
+        resp = list(messages_serializer.data)
+        return Response({"Messages": resp[::-1]}, status=status.HTTP_200_OK)

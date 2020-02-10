@@ -8,6 +8,7 @@ from .views import (
     ViewRequests,
     ViewChatRooms,
     ViewUserDetails,
+    PreviousMessagesView,
 )
 from rest_framework import routers
 
@@ -23,4 +24,5 @@ urlpatterns = [
     path("view_requests/", ViewRequests.as_view()),
     path("view_chat_rooms/", ViewChatRooms.as_view()),
     path("view_user_details/", ViewUserDetails.as_view()),
+    path("previous_messages/<int:pk>/", PreviousMessagesView.as_view()),
 ]

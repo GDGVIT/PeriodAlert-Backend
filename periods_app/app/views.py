@@ -35,6 +35,10 @@ class UserSignupView(APIView):
                 username=user_data['username'], 
                 phone_no=user_data['phone_no'],
                 date_of_birth=user_data['date_of_birth'])
+
+            user = authenticate(email=user_data['email'], password=user_data['password'])
+            token, _ = Token.objects.get_or_create(user=user)
+            user_data['token'] = token.key
             return Response({"message":"User Signed up successfully", "User":user_data}, status=status.HTTP_201_CREATED)
         else:
             return Response({"message":"Invalid Data"}, status=status.HTTP_400_BAD_REQUEST)

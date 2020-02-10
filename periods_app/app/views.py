@@ -180,7 +180,11 @@ class ViewRequests(APIView):
         today_date = datetime.today().strftime('%Y-%m-%d')
         req_objects = Requests.objects.filter(Q(date_time_creation__date=today_date) & ~Q(user_id=user.id))
         response = RequestsSerializer(req_objects, many=True)
-        return Response({"message":"Received Requests", "Requests":response.data}, status=status.HTTP_200_OK)
+        resp = response.data
+        for req in resp:
+            user_req = User.objects.get(id=req['user_id'])
+            req['user_username'] = user_req.username
+        return Response({"message":"Received Requests", "Requests":resp}, status=status.HTTP_200_OK)
 
 
 class ViewChatRooms(APIView):
@@ -190,7 +194,30 @@ class ViewChatRooms(APIView):
         user = request.user
         chatRooms = ChatRoom.objects.filter( Q(participant1_id=user.id) | Q(participant2_id=user.id))
         chatRooms_serializer = ChatRoomSerializer(chatRooms, many=True)
-        if len(chatRooms_serializer.data) == 0:
+        resp = chatRooms_serializer.data
+        if len(resp) == 0:
             return Response({"message":"No chat rooms available"}, status=status.HTTP_204_NO_CONTENT)
         else:
-            return Response({"message":"Chat rooms found", "ChatRooms":chatRooms_serializer.data}, status=status.HTTP_200_OK)
+            resp = chatRooms_serializer.data
+            for chatroom in resp:
+                user1 = User.objects.get(id=chatroom['participant1_id'])
+                user2 = User.objects.get(id=chatroom['participant2_id'])
+                chatroom['participant1_username'] = user1.username
+                chatroom['participant2_username'] = user2.username
+            return Response({"message":"Chat rooms found", "ChatRooms":resp}, status=status.HTTP_200_OK)
+
+class ViewUserDetails(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        user = request.user
+        return Response({
+            "message":"User Details",
+            "User": {
+                "id": user.id,
+                "email":user.email,
+                "username":user.username,
+                "phone_no":user.phone_no,
+                "date_of_birth":user.date_of_birth
+            }                
+        })

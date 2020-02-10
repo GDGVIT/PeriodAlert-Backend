@@ -128,7 +128,8 @@ class ChatConsumer(WebsocketConsumer):
         message_serializer = MessageSerializer(data={
             "body":message,
             "receiver_id":receiver_id,
-            "sender_id":sender_id
+            "sender_id":sender_id,
+            "chat_room_id":self.room_name
         })
 
         

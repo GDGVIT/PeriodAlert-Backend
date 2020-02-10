@@ -33,15 +33,25 @@ class Requests(models.Model):
     longitude = models.FloatField()
     date_time_creation = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        ordering = ['-date_time_creation']
+
 class ChatRoom(models.Model):
     participant1_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name="participant1_id")
     participant2_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name="participant2_id")
     last_message_time = models.DateTimeField()
     date_time_creation = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        ordering = ['-last_message_time']
+
 class Messages(models.Model):
+    chat_room_id = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, related_name="chat_room_id")
     sender_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name="sender_id")
     receiver_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name="receiver_id")
     body = models.TextField()
     date_time_creation = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-date_time_creation']
 

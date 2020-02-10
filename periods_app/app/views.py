@@ -144,9 +144,9 @@ class FCMRegisterDeviceView(APIView):
 class FCMPushNotificationView(APIView):
     permission_classes = (IsAuthenticated,)
 
-    def get(self, request):
-        lat = request.query_params.get("lat", None)
-        lon = request.query_params.get("lon", None)
+    def post(self, request):
+        lat = request.data["latitude"]
+        lon = request.data["longitude"]
         try:
             # Checking if the user making quesry has a registered device
             user = request.user

@@ -16,6 +16,6 @@ import os
 import django
 from channels.routing import get_default_application
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "periods_app.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "periods_app.periods_app.settings")
 django.setup()
 application = get_default_application()

@@ -118,22 +118,56 @@ class ChatConsumer(WebsocketConsumer):
     # Receive message from WebSocket
     def receive(self, text_data):
         text_data_json = json.loads(text_data)
+
+        # Getting data from the message
         message = text_data_json['message']
+        sender_id = text_data_json['sender_id']
+        receiver_id = text_data_json['receiver_id']
+
+        # Saving message on database
+        message_serializer = MessageSerializer(data={
+            "body":message,
+            "receiver_id":receiver_id,
+            "sender_id":sender_id
+        })
+
+        
+        if message_serializer.is_valid():
+            message_serializer.save()
+            # Updating the last sent message in the chat room
+            try:
+                room = ChatRoom.objects.get(id=self.room_name)
+                room.last_message_time = datetime.now()
+                room.save()
+
+                # Sending notification to the receivers device
+                user = User.objects.get(id=receiver_id)
+                device = FCMDevice.objects.get(user=user)
+                device.send_message(title="New Message from " + user.username, body=message)
+                print("Notification sent to " + user.username + "\nBody: " + message)
+            except:
+                pass
 
         # Send message to room group
         async_to_sync(self.channel_layer.group_send)(
             self.room_group_name,
             {
                 'type': 'chat_message',
-                'message': message
+                'message': message,
+                'sender_id': sender_id,
+                'receiver_id': receiver_id
             }
         )
 
     # Receive message from room group
     def chat_message(self, event):
         message = event['message']
+        sender_id = event['sender_id']
+        receiver_id = event['receiver_id']
 
         # Send message to WebSocket
         self.send(text_data=json.dumps({
-            'message': message
+            'message': message,
+            'sender_id': sender_id,
+            'receiver_id': receiver_id
         }))

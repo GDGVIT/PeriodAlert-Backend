@@ -6,6 +6,7 @@ from .views import (
     FCMRegisterDeviceView,
     FCMPushNotificationView,
     ViewRequests,
+    ViewChatRooms,
 )
 from rest_framework import routers
 
@@ -19,4 +20,5 @@ urlpatterns = [
     path("device_register/", FCMRegisterDeviceView.as_view()),
     path("send_alert/", FCMPushNotificationView.as_view()),
     path("view_requests/", ViewRequests.as_view()),
+    path("view_chat_rooms/", ViewChatRooms.as_view()),
 ]

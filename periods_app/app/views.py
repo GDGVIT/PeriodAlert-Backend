@@ -181,3 +181,16 @@ class ViewRequests(APIView):
         req_objects = Requests.objects.filter(Q(date_time_creation__date=today_date) & ~Q(user_id=user.id))
         response = RequestsSerializer(req_objects, many=True)
         return Response({"message":"Received Requests", "Requests":response.data}, status=status.HTTP_200_OK)
+
+
+class ViewChatRooms(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def get(self, request):
+        user = request.user
+        chatRooms = ChatRoom.objects.filter( Q(participant1_id=user.id) | Q(participant2_id=user.id))
+        chatRooms_serializer = ChatRoomSerializer(chatRooms, many=True)
+        if len(chatRooms_serializer.data) == 0:
+            return Response({"message":"No chat rooms available"}, status=status.HTTP_204_NO_CONTENT)
+        else:
+            return Response({"message":"Chat rooms found", "ChatRooms":chatRooms_serializer.data}, status=status.HTTP_200_OK)

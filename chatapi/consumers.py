@@ -23,6 +23,7 @@ class ChatConsumer(WebsocketConsumer):
 
         # if user is a request acceptor
         if is_request_acceptor == '1':
+            print("Request Acceptor is 1")
 
             # Checking if the chat room for the user already exist, 
             # if yes then connect to the same chat room
@@ -30,6 +31,7 @@ class ChatConsumer(WebsocketConsumer):
                 Q(participant1_id=user.id, participant2_id=receiver.id) |
                 Q(participant1_id=receiver.id, participant2_id=user.id))
             if len(room) != 0:
+                print("Room already available")
                 return room[0].id
             
             # Channel or chat room does not exist create a new one
@@ -37,6 +39,7 @@ class ChatConsumer(WebsocketConsumer):
             # Checking requests if it exists or not
             requset_sent = Requests.objects.filter(user_id=receiver.id)
             if len(requset_sent) == 0:
+                print("Request Not available")
                 return None 
 
             # Creating a new Chat Room
@@ -45,21 +48,27 @@ class ChatConsumer(WebsocketConsumer):
                 "participant2_id":receiver.id,
                 "last_message_time":datetime.now()
             })
+            print("Room made")
             if room.is_valid():
+                print("Room validated")
                 room.save()
                 return room.data['id']
             else:
+                print("No Room")
                 return None
 
         # if user is not a request acceptor
         elif is_request_acceptor == '0':
+            print("Requst acceptor is 0")
             room = ChatRoom.objects.filter(
                 Q(participant1_id=user.id, participant2_id=receiver.id) |
                 Q(participant1_id=receiver.id, participant2_id=user.id))
-
+            
             if len(room) != 0:
+                print("Room available !!!")
                 return room[0].id
             else:
+                print("NO ROOM!!!")
                 return None
 
 
@@ -69,17 +78,23 @@ class ChatConsumer(WebsocketConsumer):
         is_request_acceptor = self.scope['url_route']['kwargs']['is_request_acceptor']
         receiver_id = self.scope['url_route']['kwargs']['receiver_id']
 
+        print(token)
+        print(is_request_acceptor)
+        print(receiver_id)
+
         # Checking if the user is really valid based on the token 
         # and if the receiver exists
         try:
             user = Token.objects.get(key=token).user
+            print(user)
             receiver = User.objects.get(id=receiver_id)
+            print(receiver)
             if user == receiver:
                 room_id = None
 
             # Finding room name for the channel (Based on the chat room id)
             room_id = self.find_room_name(user, receiver, is_request_acceptor)
-
+            print("Room: ")
             print(room_id)
 
             if room_id != None:
@@ -97,6 +112,7 @@ class ChatConsumer(WebsocketConsumer):
                 self.accept()
             
             else:
+                print("No room found so closing")
                 self.room_group_name = None
                 self.close()
 

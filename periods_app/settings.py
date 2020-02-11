@@ -96,10 +96,10 @@ WSGI_APPLICATION = 'periods_app.wsgi.application'
 ASGI_APPLICATION = 'periods_app.routing.application'
 
 CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'channels_redis.core.RedisChannelLayer',
-        'CONFIG': {
-            "hosts": [('127.0.0.1', 6379)],
+    "default": {
+        "BACKEND": "channels_rabbitmq.core.RabbitmqChannelLayer",
+        "CONFIG": {
+            "host": os.getenv("RABBITMQ_HOST_URL")
         },
     },
 }

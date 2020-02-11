@@ -97,7 +97,7 @@ class ChatConsumer(WebsocketConsumer):
                 self.accept()
             
             else:
-
+                self.room_group_name = None
                 self.close()
 
         except Token.DoesNotExist:

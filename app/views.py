@@ -41,8 +41,8 @@ class UserSignupView(APIView):
             user_data['token'] = token.key
             return Response({"message":"User Signed up successfully", "User":user_data}, status=status.HTTP_201_CREATED)
         else:
-            return Response({"message":"Invalid Data"}, status=status.HTTP_400_BAD_REQUEST)
-
+            return Response({"message":serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+            
     # Check if user exists or not
     def get(self, request):
         email = request.query_params.get("email")

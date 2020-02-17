@@ -6,7 +6,7 @@ from channels.generic.websocket import WebsocketConsumer
 from django.db.models import Q
 from rest_framework.authtoken.models import Token
 
-from app.models import ChatRoom, Messages, Requests, User
+from app.models import ChatRoom, Messages, Alert, User
 from app.serializers import ChatRoomSerializer, MessageSerializer
 
 from fcm_django.models import FCMDevice
@@ -36,8 +36,8 @@ class ChatConsumer(WebsocketConsumer):
             
             # Channel or chat room does not exist create a new one
 
-            # Checking requests if it exists or not
-            requset_sent = Requests.objects.filter(user_id=receiver.id)
+            # Checking Alert if it exists or not
+            requset_sent = Alert.objects.filter(user_id=receiver.id)
             if len(requset_sent) == 0:
                 print("Request Not available")
                 return None 

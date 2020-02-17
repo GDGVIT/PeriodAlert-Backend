@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User, ChatRoom, Messages, Requests
+from .models import User, ChatRoom, Messages, Alert
 from .forms import CustomUserCreationForm, CustomUserChangeForm
 
 
@@ -26,4 +26,4 @@ class CustomUserAdmin(UserAdmin):
 admin.site.register(User, CustomUserAdmin)
 admin.site.register(ChatRoom)
 admin.site.register(Messages)
-admin.site.register(Requests)
+admin.site.register(Alert)

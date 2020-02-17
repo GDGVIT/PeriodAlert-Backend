@@ -27,7 +27,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         return self.email
 
 
-class Requests(models.Model):
+class Alert(models.Model):
     user_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name="user_id")
     latitude = models.FloatField()
     longitude = models.FloatField()

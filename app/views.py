@@ -13,8 +13,8 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import ChatRoom, Messages, Requests, User
-from .serializers import (ChatRoomSerializer, RequestsSerializer,
+from .models import ChatRoom, Messages, Alert, User
+from .serializers import (ChatRoomSerializer, AlertSerializer,
                           UserLoginSerializer, UserSignupSerializer,
                           MessageSerializer)
 
@@ -163,7 +163,7 @@ class FCMPushNotificationView(APIView):
             devices.send_message(data={"lat":lat, "lon":lon, "user_id":user.id})
            
            # Creating a new request for help in the database
-            req_ser = RequestsSerializer(data={
+            req_ser = AlertSerializer(data={
                 "user_id":user.id,
                 "latitude":lat,
                 "longitude":lon
@@ -177,19 +177,19 @@ class FCMPushNotificationView(APIView):
             return Response({"message":str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class ViewRequests(APIView):
+class ViewAlert(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
         user = request.user
         today_date = datetime.today().strftime('%Y-%m-%d')
-        req_objects = Requests.objects.filter(Q(date_time_creation__date=today_date) & ~Q(user_id=user.id))
-        response = RequestsSerializer(req_objects, many=True)
+        req_objects = Alert.objects.filter(Q(date_time_creation__date=today_date) & ~Q(user_id=user.id))
+        response = AlertSerializer(req_objects, many=True)
         resp = response.data
         for req in resp:
             user_req = User.objects.get(id=req['user_id'])
             req['user_username'] = user_req.username
-        return Response({"message":"Received Requests", "Requests":resp}, status=status.HTTP_200_OK)
+        return Response({"message":"Received Alert", "Alert":resp}, status=status.HTTP_200_OK)
 
 
 class ViewChatRooms(APIView):

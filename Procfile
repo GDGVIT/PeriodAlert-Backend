@@ -1,2 +1,2 @@
-web: gunicorn project_ideas.wsgi
+web: gunicorn periods_app.asgi
 worker: python runner.py

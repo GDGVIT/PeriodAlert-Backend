@@ -5,6 +5,7 @@ from django.db.models import Q
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.db import close_old_connections
+from django.db import connections
 
 from fcm_django.models import FCMDevice
 
@@ -26,7 +27,6 @@ class UserSignupView(APIView):
 
     # Sigup user (create new object)
     def post(self, request):
-        close_old_connections()
         serializer = UserSignupSerializer(data=request.data)
 
         if serializer.is_valid():
@@ -41,24 +41,23 @@ class UserSignupView(APIView):
             user = authenticate(email=user_data['email'], password=user_data['password'])
             token, _ = Token.objects.get_or_create(user=user)
             user_data['token'] = token.key
-            close_old_connections()
+
             return Response({"message":"User Signed up successfully", "User":user_data}, status=status.HTTP_201_CREATED)
         else:
-            close_old_connections()
+
             return Response({"message":serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
             
     # Check if user exists or not
     def get(self, request):
-        close_old_connections()
         email = request.query_params.get("email")
         password = request.query_params.get("password")
         print(email + "___" + password)
         user = authenticate(email=email, password=password)
         if not user:
-            close_old_connections()
+
             return Response({"message":"User does not exist"}, status=status.HTTP_204_NO_CONTENT)
         else:
-            close_old_connections()
+
             return Response({"message":"User Already Exists"}, status=status.HTTP_302_FOUND)
 
 # View for user login
@@ -66,15 +65,14 @@ class UserLoginView(APIView):
     permission_classes = (AllowAny,)
     
     def post(self, request):
-        close_old_connections()
         req_data = request.data
         user = authenticate(email=req_data['email'], password=req_data['password'])
         if not user:
-            close_old_connections()
+
             return Response({"message":"Invalid Details"}, status=status.HTTP_400_BAD_REQUEST)
         else:
             token, _ = Token.objects.get_or_create(user=user)
-            close_old_connections()
+
             return Response({
                 "message":"User Logged In", 
                 "User":{
@@ -91,7 +89,6 @@ class UserLogoutView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, format=None):
-        close_old_connections()
         user = request.user
         response = {
             "message":"User logged out", 
@@ -103,7 +100,6 @@ class UserLogoutView(APIView):
                 "date_of_birth":user.date_of_birth
             }}
         request.user.auth_token.delete()
-        close_old_connections()
         return Response(response, status=status.HTTP_200_OK)
 
 # Register a new device to backend and store registration_id
@@ -112,12 +108,11 @@ class FCMRegisterDeviceView(APIView):
 
     # Register a new device (create new object)
     def post(self, request):
-        close_old_connections()
         req_data = request.data
         user = request.user
         try:
             device = FCMDevice.objects.get(user=user)
-            close_old_connections()
+
             return Response({"message":"Device already registered for the user"}, status=status.HTTP_400_BAD_REQUEST)
         except:
             device = FCMDevice()
@@ -126,7 +121,7 @@ class FCMRegisterDeviceView(APIView):
             device.type = "Android"
             device.user = request.user
             device.save()
-            close_old_connections()
+
             return Response(
                 {"message":"New Device Registered", 
                 "device_details":{
@@ -139,7 +134,6 @@ class FCMRegisterDeviceView(APIView):
     
     # Update the device_id or registraton_token for a registered device
     def patch(self, request):
-        close_old_connections()
         req_data = request.data
         user = request.user
         try:
@@ -149,7 +143,7 @@ class FCMRegisterDeviceView(APIView):
             if req_data['registration_id'] != None:
                 device.registration_id = req_data['registration_id']
             device.save()
-            close_old_connections()
+
             return Response(
                 {"message":"Device registration_id updated",
                 "device_details":{
@@ -159,7 +153,7 @@ class FCMRegisterDeviceView(APIView):
                     "user":device.user.id
                 }}, status=status.HTTP_200_OK)
         except:
-            close_old_connections()
+
             return Response({"message":"User does not have a registered device"}, status=status.HTTP_400_BAD_REQUEST)
             
 # Send Alert notification to all the devices other than the users device
@@ -167,7 +161,6 @@ class FCMPushNotificationView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def post(self, request):
-        close_old_connections()
         lat = request.data["latitude"]
         lon = request.data["longitude"]
         try:
@@ -176,7 +169,7 @@ class FCMPushNotificationView(APIView):
             try:
                 device = FCMDevice.objects.get(user=user)
             except:
-                close_old_connections()
+    
                 return Response({"message":"The User's device is not registered"}, status=status.HTTP_400_BAD_REQUEST)
             # To get all devices other than the one who made request
             devices = FCMDevice.objects.exclude(user=user)
@@ -190,13 +183,13 @@ class FCMPushNotificationView(APIView):
             })
             if req_ser.is_valid():
                 req_ser.save()
-                close_old_connections()
+    
                 return Response({"message":"Sent notificaion", "Request":req_ser.data}, status=status.HTTP_200_OK)
             else:
-                close_old_connections()
+    
                 return Response({"message":req_ser.errors}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
-            close_old_connections()
+
             return Response({"message":str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -204,7 +197,6 @@ class ViewAlert(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
-        close_old_connections()
         user = request.user
         today_date = datetime.today().strftime('%Y-%m-%d')
         req_objects = Alert.objects.filter(Q(date_time_creation__date=today_date) & ~Q(user_id=user.id))
@@ -213,7 +205,6 @@ class ViewAlert(APIView):
         for req in resp:
             user_req = User.objects.get(id=req['user_id'])
             req['user_username'] = user_req.username
-        close_old_connections()
         return Response({"message":"Received Alert", "Alert":resp}, status=status.HTTP_200_OK)
 
 
@@ -221,13 +212,12 @@ class ViewChatRooms(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
-        close_old_connections()
         user = request.user
         chatRooms = ChatRoom.objects.filter( Q(participant1_id=user.id) | Q(participant2_id=user.id))
         chatRooms_serializer = ChatRoomSerializer(chatRooms, many=True)
         resp = chatRooms_serializer.data
         if len(resp) == 0:
-            close_old_connections()
+
             return Response({"message":"No chat rooms available"}, status=status.HTTP_204_NO_CONTENT)
         else:
             resp = chatRooms_serializer.data
@@ -236,16 +226,14 @@ class ViewChatRooms(APIView):
                 user2 = User.objects.get(id=chatroom['participant2_id'])
                 chatroom['participant1_username'] = user1.username
                 chatroom['participant2_username'] = user2.username
-            close_old_connections()
+
             return Response({"message":"Chat rooms found", "ChatRooms":resp}, status=status.HTTP_200_OK)
 
 class ViewUserDetails(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request):
-        close_old_connections()
         user = request.user
-        close_old_connections()
         return Response({
             "message":"User Details",
             "User": {
@@ -262,14 +250,12 @@ class PreviousMessagesView(APIView):
     permission_classes = (IsAuthenticated,)
 
     def get(self, request, pk):
-        close_old_connections()
         user = request.user
         chatroom = ChatRoom.objects.filter(Q(participant1_id=user.id) | Q(participant2_id=user.id))
         if len(chatroom) == 0:
-            close_old_connections()
+
             return Response({"message":"Invalid Chat Room"}, status=status.HTTP_400_BAD_REQUEST)
         messages = Messages.objects.filter(chat_room_id=pk)
         messages_serializer = MessageSerializer(messages, many=True)
         resp = list(messages_serializer.data)
-        close_old_connections()
         return Response({"Messages": resp[::-1]}, status=status.HTTP_200_OK)

@@ -169,12 +169,20 @@ class FCMPushNotificationView(APIView):
             # Checking if the user making quesry has a registered device
             user = request.user
             try:
-                device = FCMDevice.objects.get(user=user)
+                user_device = FCMDevice.objects.get(user=user)
             except:
                 connection.close()
                 return Response({"message":"The User's device is not registered"}, status=status.HTTP_400_BAD_REQUEST)
-            # To get all devices other than the one who made request
-            devices = FCMDevice.objects.exclude(user=user)
+            # To get all devices other than the one who made request (only logged in users)
+            
+            tokens = Token.objects.all()
+            logged_in_users = []
+            for token in tokens:
+                token_user = Token.objects.get(key=token).user
+                if token_user != user:
+                    logged_in_users.append(token_user)
+
+            devices = FCMDevice.objects.filter(user__in=[user for user in logged_in_users])
             devices.send_message(data={"lat":lat, "lon":lon, "user_id":user.id})
            
            # Creating a new request for help in the database

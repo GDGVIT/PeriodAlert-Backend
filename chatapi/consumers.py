@@ -159,11 +159,20 @@ class ChatConsumer(WebsocketConsumer):
                 room.save()
 
                 # Sending notification to the receivers device
-                user = User.objects.get(id=sender_id)
-                device = FCMDevice.objects.get(user=user)
-                device.send_message(title="New Message from " + user.username, body=message)
+                sender = User.objects.get(id=sender_id)
+                receiver = User.objects.get(id=receiver_id)
+                device = FCMDevice.objects.get(user=receiver)
+                device.send_message(
+                    title="New Message from " + sender.username, 
+                    body=message,
+                    data={
+                        "sender_id":sender_id,
+                        "receiver_id":receiver_id,
+                        "sender_name":sender.username,
+                        "body":message
+                    })
                 
-                print("Notification sent to " + user.username + "\nBody: " + message)
+                print("Notification sent to " + sender.username + "\nBody: " + message)
             except:
                 pass
 

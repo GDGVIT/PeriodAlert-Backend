@@ -91,9 +91,10 @@ class ChatConsumer(WebsocketConsumer):
             print(receiver)
             if user == receiver:
                 room_id = None
-
-            # Finding room name for the channel (Based on the chat room id)
-            room_id = self.find_room_name(user, receiver, is_request_acceptor)
+            else:
+                # Finding room name for the channel (Based on the chat room id)
+                room_id = self.find_room_name(user, receiver, is_request_acceptor)
+                
             print("Room: ")
             print(room_id)
 

@@ -183,6 +183,14 @@ class FCMPushNotificationView(APIView):
                     logged_in_users.append(token_user)
 
             devices = FCMDevice.objects.filter(user__in=[user for user in logged_in_users])
+            # for dev in devices:
+            #     print(dev.active)
+            #     dev.active = True
+            #     dev.save()
+            #     print(dev.active)
+            # print("$$$$$$$$$$$")
+            # for dev in devices:
+            #     print(dev.active)
             devices.send_message(data={"lat":lat, "lon":lon, "user_id":user.id})
            
            # Creating a new request for help in the database

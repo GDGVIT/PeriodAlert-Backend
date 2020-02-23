@@ -161,14 +161,7 @@ class ChatConsumer(WebsocketConsumer):
                 # Sending notification to the receivers device
                 user = User.objects.get(id=sender_id)
                 device = FCMDevice.objects.get(user=user)
-                device.send_message(
-                    title="New Message from " + user.username, 
-                    body=message, 
-                    data={
-                        "sender_name":user.username,
-                        "body":message, 
-                        "sender_id":sender_id, 
-                        "receiver_id":receiver_id})
+                device.send_message(title="New Message from " + user.username, body=message)
                 print("Notification sent to " + user.username + "\nBody: " + message)
             except:
                 pass

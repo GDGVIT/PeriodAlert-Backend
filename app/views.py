@@ -41,7 +41,9 @@ class UserSignupView(APIView):
 
             user = authenticate(email=user_data['email'], password=user_data['password'])
             token, _ = Token.objects.get_or_create(user=user)
+            user_data['id'] = user.id
             user_data['token'] = token.key
+            
             connection.close()
             return Response({"message":"User Signed up successfully", "User":user_data}, status=status.HTTP_201_CREATED)
         else:

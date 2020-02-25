@@ -10,6 +10,7 @@ from app.models import ChatRoom, Messages, Alert, User
 from app.serializers import ChatRoomSerializer, MessageSerializer
 
 from fcm_django.models import FCMDevice
+from django.db import connection
 
 
 class ChatConsumer(WebsocketConsumer):
@@ -115,17 +116,20 @@ class ChatConsumer(WebsocketConsumer):
             else:
                 print("No room found so closing")
                 self.room_group_name = None
+                connection.close()
                 self.close()
 
         except Token.DoesNotExist:
             print("Not valid user")
             self.room_group_name = None
+            connection.close()
             self.close()  
         
         
     def disconnect(self, close_code):
         # Leave room group
         if self.room_group_name:
+            connection.close()
             async_to_sync(self.channel_layer.group_discard)(
                 self.room_group_name,
                 self.channel_name

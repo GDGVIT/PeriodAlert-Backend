@@ -1,2 +1,1 @@
-web: daphne periods_app.asgi:application -p $PORT --bind 0.0.0.0
-worker: python runner.py
+web: gunicorn -w 4 -k uvicorn.workers.UvicornWorker periods_app.asgi:application

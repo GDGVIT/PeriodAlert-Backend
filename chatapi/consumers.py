@@ -10,6 +10,7 @@ from app.models import ChatRoom, Messages, Alert, User
 from app.serializers import ChatRoomSerializer, MessageSerializer
 
 from fcm_django.models import FCMDevice
+from django.db import connection
 
 
 class ChatConsumer(WebsocketConsumer):
@@ -91,9 +92,10 @@ class ChatConsumer(WebsocketConsumer):
             print(receiver)
             if user == receiver:
                 room_id = None
-
-            # Finding room name for the channel (Based on the chat room id)
-            room_id = self.find_room_name(user, receiver, is_request_acceptor)
+            else:
+                # Finding room name for the channel (Based on the chat room id)
+                room_id = self.find_room_name(user, receiver, is_request_acceptor)
+                
             print("Room: ")
             print(room_id)
 
@@ -114,17 +116,20 @@ class ChatConsumer(WebsocketConsumer):
             else:
                 print("No room found so closing")
                 self.room_group_name = None
+                connection.close()
                 self.close()
 
         except Token.DoesNotExist:
             print("Not valid user")
             self.room_group_name = None
+            connection.close()
             self.close()  
         
         
     def disconnect(self, close_code):
         # Leave room group
         if self.room_group_name:
+            connection.close()
             async_to_sync(self.channel_layer.group_discard)(
                 self.room_group_name,
                 self.channel_name
@@ -158,10 +163,20 @@ class ChatConsumer(WebsocketConsumer):
                 room.save()
 
                 # Sending notification to the receivers device
-                user = User.objects.get(id=receiver_id)
-                device = FCMDevice.objects.get(user=user)
-                device.send_message(title="New Message from " + user.username, body=message)
-                print("Notification sent to " + user.username + "\nBody: " + message)
+                sender = User.objects.get(id=sender_id)
+                receiver = User.objects.get(id=receiver_id)
+                device = FCMDevice.objects.get(user=receiver)
+                device.send_message(
+                    title="New Message from " + sender.username, 
+                    body=message,
+                    data={
+                        "sender_id":sender_id,
+                        "receiver_id":receiver_id,
+                        "sender_name":sender.username,
+                        "body":message
+                    })
+                
+                print("Notification sent to " + sender.username + "\nBody: " + message)
             except:
                 pass
 

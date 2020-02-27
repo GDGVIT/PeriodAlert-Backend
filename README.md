@@ -10,10 +10,10 @@
 
 
 ## Functionalities
-- [ ]  Send Alert messages to nearby women about Periods
-- [ ]  Chat with users who wish to help
-- [ ]  Keep track of menstrual cycle and receive alerts
-- [ ]  Visualise the changes in your cycle easily
+- [x]  Send Alert messages to nearby women about Periods
+- [x]  Chat with users who wish to help
+- [x]  Keep track of menstrual cycle and receive alerts
+- [x]  Visualise the changes in your cycle easily
 
 <br>
 

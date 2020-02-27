@@ -193,7 +193,7 @@ class FCMPushNotificationView(APIView):
             # print("$$$$$$$$$$$")
             # for dev in devices:
             #     print(dev.active)
-            devices.send_message(data={"lat":lat, "lon":lon, "user_id":user.id})
+            devices.send_message(data={"lat":lat, "lon":lon, "user_id":user.id, "user_name":user.username})
            
            # Creating a new request for help in the database
             req_ser = AlertSerializer(data={

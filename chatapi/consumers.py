@@ -185,9 +185,10 @@ class ChatConsumer(WebsocketConsumer):
             self.room_group_name,
             {
                 'type': 'chat_message',
+                'id':message_serializer.data['id'],
                 'message': message,
                 'sender_id': sender_id,
-                'receiver_id': receiver_id
+                'receiver_id': receiver_id,
             }
         )
 
@@ -196,9 +197,11 @@ class ChatConsumer(WebsocketConsumer):
         message = event['message']
         sender_id = event['sender_id']
         receiver_id = event['receiver_id']
+        message_id = event['id']
 
         # Send message to WebSocket
         self.send(text_data=json.dumps({
+            'id':message_id,
             'message': message,
             'sender_id': sender_id,
             'receiver_id': receiver_id

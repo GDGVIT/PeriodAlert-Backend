@@ -156,29 +156,37 @@ class ChatConsumer(WebsocketConsumer):
         
         if message_serializer.is_valid():
             message_serializer.save()
+            message_obj = Messages.objects.get(id=message_serializer.data['id'])
             # Updating the last sent message in the chat room
             try:
-                room = ChatRoom.objects.get(id=self.room_name)
-                room.last_message_time = datetime.now()
-                room.save()
-
-                # Sending notification to the receivers device
                 sender = User.objects.get(id=sender_id)
                 receiver = User.objects.get(id=receiver_id)
+                room = ChatRoom.objects.get(id=self.room_name)
+                room.last_message_time = datetime.now()
+                room.last_message_body = message
+                room.last_message_sender = sender
+                room.save()
+            
+
+                # Sending notification to the receivers device
+                
                 device = FCMDevice.objects.get(user=receiver)
                 device.send_message(
-                    title="New Message from " + sender.username, 
-                    body=message,
                     data={
                         "sender_id":sender_id,
                         "receiver_id":receiver_id,
                         "sender_name":sender.username,
-                        "body":message
+                        "title":"New Message from " + sender.username, 
+                        "body":message,
+                        "chat_room_id":message_obj.chat_room_id,
+                        "participant_1":message_obj.chat_room_id.participant1_id,
+                        "participant_":message_obj.chat_room_id.participant2_id
                     })
                 
-                print("Notification sent to " + sender.username + "\nBody: " + message)
-            except:
-                pass
+                print("Notification sent to " + receiver.username + "\nBody: " + message)
+            except Exception as error:
+                print(message)
+                print(error)
 
         # Send message to room group
         async_to_sync(self.channel_layer.group_send)(

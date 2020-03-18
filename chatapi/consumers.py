@@ -180,7 +180,7 @@ class ChatConsumer(WebsocketConsumer):
                         "body":message,
                         "chat_room_id":message_obj.chat_room_id,
                         "participant_1":message_obj.chat_room_id.participant1_id,
-                        "participant_":message_obj.chat_room_id.participant2_id
+                        "participant_2":message_obj.chat_room_id.participant2_id
                     })
                 
                 print("Notification sent to " + receiver.username + "\nBody: " + message)

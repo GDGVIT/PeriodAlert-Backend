@@ -166,22 +166,26 @@ class ChatConsumer(WebsocketConsumer):
                 room.last_message_body = message
                 room.last_message_sender = sender
                 room.save()
+
+                send_data = {
+                    "sender_id":sender_id,
+                    "receiver_id":receiver_id,
+                    "sender_name":sender.username,
+                    "title":"New Message from " + sender.username, 
+                    "body":message,
+                    "chat_room_id":message_obj.chat_room_id.id,
+                    "participant_1":message_obj.chat_room_id.participant1_id.id,
+                    "participant_2":message_obj.chat_room_id.participant2_id.id
+                }
+
+                print(send_data)
             
 
                 # Sending notification to the receivers device
                 
                 device = FCMDevice.objects.get(user=receiver)
                 device.send_message(
-                    data={
-                        "sender_id":sender_id,
-                        "receiver_id":receiver_id,
-                        "sender_name":sender.username,
-                        "title":"New Message from " + sender.username, 
-                        "body":message,
-                        "chat_room_id":message_obj.chat_room_id,
-                        "participant_1":message_obj.chat_room_id.participant1_id,
-                        "participant_2":message_obj.chat_room_id.participant2_id
-                    })
+                    data=send_data)
                 
                 print("Notification sent to " + receiver.username + "\nBody: " + message)
             except Exception as error:

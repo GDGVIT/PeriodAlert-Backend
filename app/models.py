@@ -40,6 +40,8 @@ class ChatRoom(models.Model):
     participant1_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name="participant1_id")
     participant2_id = models.ForeignKey(User, on_delete=models.CASCADE, related_name="participant2_id")
     last_message_time = models.DateTimeField()
+    last_message_body = models.TextField(null=True)
+    last_message_sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name="last_message_sender", null=True)
     date_time_creation = models.DateTimeField(auto_now_add=True)
 
     class Meta:
